@@ -1,0 +1,50 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: inventory-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${SQL_PASSWORD:-Your_password123}
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver-data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P ${SQL_PASSWORD:-Your_password123} -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/InventoryManagement.Api/Dockerfile
+    container_name: inventory-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: Server=sqlserver,1433;Database=InventoryManagementDb;User Id=sa;Password=${SQL_PASSWORD:-Your_password123};TrustServerCertificate=True
+      JWT_SECRET: ${JWT_SECRET:-CHANGE_ME_SUPER_SECRET_DEVELOPMENT_KEY_32_CHARS}
+      JWT_ISSUER: ${JWT_ISSUER:-InventoryManagement}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-InventoryManagementClient}
+      Frontend__Url: http://localhost:${FRONTEND_PORT:-5173}
+    ports:
+      - "${API_PORT:-5000}:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/inventory-management-client/Dockerfile
+      args:
+        VITE_API_URL: http://localhost:${API_PORT:-5000}/api
+    container_name: inventory-frontend
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+    depends_on:
+      - api
+
+volumes:
+  sqlserver-data:
