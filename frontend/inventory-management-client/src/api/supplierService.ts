@@ -1,0 +1,20 @@
+import { apiClient } from './client';
+import type { Supplier } from '../types';
+
+export const supplierService = {
+  async list() {
+    const { data } = await apiClient.get<Supplier[]>('/suppliers');
+    return data;
+  },
+  async create(payload: Omit<Supplier, 'id' | 'isActive'>) {
+    const { data } = await apiClient.post<Supplier>('/suppliers', payload);
+    return data;
+  },
+  async update(id: string, payload: Omit<Supplier, 'id' | 'isActive'>) {
+    const { data } = await apiClient.put<Supplier>(`/suppliers/${id}`, payload);
+    return data;
+  },
+  async deactivate(id: string) {
+    await apiClient.delete(`/suppliers/${id}`);
+  },
+};
