@@ -30,6 +30,7 @@ services:
       JWT_AUDIENCE: ${JWT_AUDIENCE:-InventoryManagementClient}
       SEED_ADMIN_EMAIL: ${SEED_ADMIN_EMAIL:-admin@inventory.local}
       SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:?SEED_ADMIN_PASSWORD is required}
+      REACTIVATE_PASSWORD: ${REACTIVATE_PASSWORD:?REACTIVATE_PASSWORD is required}
       Frontend__Url: http://localhost:${FRONTEND_PORT:-5173}
     ports:
       - "${API_PORT:-5000}:8080"

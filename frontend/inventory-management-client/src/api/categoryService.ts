@@ -21,4 +21,8 @@ export const categoryService = {
     await apiClient.delete(`/categories/${id}`);
     notifyDataChanged();
   },
+  async activate(id: string, password: string) {
+    await apiClient.patch(`/categories/${id}/activate`, { password });
+    notifyDataChanged();
+  },
 };

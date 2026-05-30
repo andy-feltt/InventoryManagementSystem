@@ -11,14 +11,17 @@
 | POST | `/api/products` | Create product | Yes | Admin |
 | PUT | `/api/products/{id}` | Update product | Yes | Admin |
 | DELETE | `/api/products/{id}` | Deactivate product | Yes | Admin |
+| PATCH | `/api/products/{id}/activate` | Reactivate product with reactivation password | Yes | Admin |
 | GET | `/api/categories` | List categories | Yes | Admin, Employee |
 | POST | `/api/categories` | Create category | Yes | Admin |
 | PUT | `/api/categories/{id}` | Update category | Yes | Admin |
 | DELETE | `/api/categories/{id}` | Deactivate category | Yes | Admin |
+| PATCH | `/api/categories/{id}/activate` | Reactivate category with reactivation password | Yes | Admin |
 | GET | `/api/suppliers` | List suppliers | Yes | Admin, Employee |
 | POST | `/api/suppliers` | Create supplier | Yes | Admin |
 | PUT | `/api/suppliers/{id}` | Update supplier | Yes | Admin |
 | DELETE | `/api/suppliers/{id}` | Deactivate supplier | Yes | Admin |
+| PATCH | `/api/suppliers/{id}/activate` | Reactivate supplier with reactivation password | Yes | Admin |
 | GET | `/api/inventory-movements/latest` | Get latest inventory movements | Yes | Admin, Employee |
 | GET | `/api/inventory-movements/product/{productId}` | Get movement history by product | Yes | Admin, Employee |
 | POST | `/api/inventory-movements` | Register entry, exit or adjustment | Yes | Admin, Employee |

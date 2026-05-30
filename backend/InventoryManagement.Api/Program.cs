@@ -27,6 +27,7 @@ builder.Host.UseSerilog((context, configuration) =>
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
+builder.Services.AddScoped<IReactivationGuard, ReactivationGuard>();
 builder.Services.AddControllers()
     .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddEndpointsApiExplorer();
@@ -143,6 +144,23 @@ namespace InventoryManagement.Api
         }
     }
 
+    public sealed class ReactivationGuard(IConfiguration configuration) : IReactivationGuard
+    {
+        public Result Validate(string password)
+        {
+            var expectedPassword = configuration["REACTIVATE_PASSWORD"] ?? configuration["Security:ReactivatePassword"];
+            if (string.IsNullOrWhiteSpace(expectedPassword))
+            {
+                return Result.Fail("Reactivation password is not configured.", StatusCodes.Status500InternalServerError);
+            }
+
+            // Reactivation is a privileged recovery action, so it requires a separate operator password.
+            return password == expectedPassword
+                ? Result.Ok()
+                : Result.Fail("Invalid reactivation password.", StatusCodes.Status403Forbidden);
+        }
+    }
+
     public sealed class ErrorHandlingMiddleware(RequestDelegate next, ILogger<ErrorHandlingMiddleware> logger, IHostEnvironment environment)
     {
         public async Task InvokeAsync(HttpContext context)
@@ -241,7 +259,7 @@ namespace InventoryManagement.Api
 
     [Authorize]
     [Route("api/products")]
-    public sealed class ProductsController(IProductService products, IValidator<ProductCreateRequest> createValidator, IValidator<ProductUpdateRequest> updateValidator) : ApiControllerBase
+    public sealed class ProductsController(IProductService products, IValidator<ProductCreateRequest> createValidator, IValidator<ProductUpdateRequest> updateValidator, IValidator<ReactivateRequest> reactivateValidator) : ApiControllerBase
     {
         [HttpGet]
         public Task<PagedResult<ProductResponse>> Get([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? search = null, [FromQuery] Guid? categoryId = null, [FromQuery] bool? isActive = null, CancellationToken cancellationToken = default) =>
@@ -269,11 +287,19 @@ namespace InventoryManagement.Api
         [HttpDelete("{id:guid}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Deactivate(Guid id, CancellationToken cancellationToken) => FromResult(await products.DeactivateAsync(id, cancellationToken));
+
+        [HttpPatch("{id:guid}/activate")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Reactivate(Guid id, ReactivateRequest request, CancellationToken cancellationToken)
+        {
+            var invalid = await ValidateAsync(reactivateValidator, request, cancellationToken);
+            return invalid ?? FromResult(await products.ReactivateAsync(id, request, cancellationToken));
+        }
     }
 
     [Authorize]
     [Route("api/categories")]
-    public sealed class CategoriesController(ICategoryService categories, IValidator<CategoryRequest> validator) : ApiControllerBase
+    public sealed class CategoriesController(ICategoryService categories, IValidator<CategoryRequest> validator, IValidator<ReactivateRequest> reactivateValidator) : ApiControllerBase
     {
         [HttpGet]
         public Task<IReadOnlyList<CategoryResponse>> Get(CancellationToken cancellationToken) => categories.GetAllAsync(cancellationToken);
@@ -297,11 +323,19 @@ namespace InventoryManagement.Api
         [HttpDelete("{id:guid}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Deactivate(Guid id, CancellationToken cancellationToken) => FromResult(await categories.DeactivateAsync(id, cancellationToken));
+
+        [HttpPatch("{id:guid}/activate")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Reactivate(Guid id, ReactivateRequest request, CancellationToken cancellationToken)
+        {
+            var invalid = await ValidateAsync(reactivateValidator, request, cancellationToken);
+            return invalid ?? FromResult(await categories.ReactivateAsync(id, request, cancellationToken));
+        }
     }
 
     [Authorize]
     [Route("api/suppliers")]
-    public sealed class SuppliersController(ISupplierService suppliers, IValidator<SupplierRequest> validator) : ApiControllerBase
+    public sealed class SuppliersController(ISupplierService suppliers, IValidator<SupplierRequest> validator, IValidator<ReactivateRequest> reactivateValidator) : ApiControllerBase
     {
         [HttpGet]
         public Task<IReadOnlyList<SupplierResponse>> Get(CancellationToken cancellationToken) => suppliers.GetAllAsync(cancellationToken);
@@ -325,6 +359,14 @@ namespace InventoryManagement.Api
         [HttpDelete("{id:guid}")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Deactivate(Guid id, CancellationToken cancellationToken) => FromResult(await suppliers.DeactivateAsync(id, cancellationToken));
+
+        [HttpPatch("{id:guid}/activate")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> Reactivate(Guid id, ReactivateRequest request, CancellationToken cancellationToken)
+        {
+            var invalid = await ValidateAsync(reactivateValidator, request, cancellationToken);
+            return invalid ?? FromResult(await suppliers.ReactivateAsync(id, request, cancellationToken));
+        }
     }
 
     [Authorize]

@@ -44,7 +44,7 @@ public sealed class AuthService(IUserRepository users, IPasswordHasher passwordH
     private static UserResponse MapUser(User user) => new(user.Id, user.FullName, user.Email, user.Role, user.CreatedAt);
 }
 
-public sealed class ProductService(IProductRepository products, ICategoryRepository categories, ISupplierRepository suppliers, IUnitOfWork unitOfWork) : IProductService
+public sealed class ProductService(IProductRepository products, ICategoryRepository categories, ISupplierRepository suppliers, IUnitOfWork unitOfWork, IReactivationGuard reactivationGuard) : IProductService
 {
     public async Task<Result<ProductResponse>> CreateAsync(ProductCreateRequest request, CancellationToken cancellationToken = default)
     {
@@ -141,6 +141,26 @@ public sealed class ProductService(IProductRepository products, ICategoryReposit
         return Result.Ok();
     }
 
+    public async Task<Result> ReactivateAsync(Guid id, ReactivateRequest request, CancellationToken cancellationToken = default)
+    {
+        var validation = reactivationGuard.Validate(request.Password);
+        if (!validation.Success)
+        {
+            return validation;
+        }
+
+        var product = await products.GetByIdAsync(id, cancellationToken);
+        if (product is null)
+        {
+            return Result.Fail("Product not found.", 404);
+        }
+
+        product.IsActive = true;
+        product.UpdatedAt = DateTime.UtcNow;
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return Result.Ok();
+    }
+
     internal static ProductResponse MapProduct(Product product) => new(
         product.Id,
         product.Name,
@@ -159,7 +179,7 @@ public sealed class ProductService(IProductRepository products, ICategoryReposit
         product.UpdatedAt);
 }
 
-public sealed class CategoryService(ICategoryRepository categories, IUnitOfWork unitOfWork) : ICategoryService
+public sealed class CategoryService(ICategoryRepository categories, IUnitOfWork unitOfWork, IReactivationGuard reactivationGuard) : ICategoryService
 {
     public async Task<IReadOnlyList<CategoryResponse>> GetAllAsync(CancellationToken cancellationToken = default) =>
         (await categories.GetAllAsync(cancellationToken)).Select(MapCategory).ToList();
@@ -199,10 +219,29 @@ public sealed class CategoryService(ICategoryRepository categories, IUnitOfWork 
         return Result.Ok();
     }
 
+    public async Task<Result> ReactivateAsync(Guid id, ReactivateRequest request, CancellationToken cancellationToken = default)
+    {
+        var validation = reactivationGuard.Validate(request.Password);
+        if (!validation.Success)
+        {
+            return validation;
+        }
+
+        var category = await categories.GetByIdAsync(id, cancellationToken);
+        if (category is null)
+        {
+            return Result.Fail("Category not found.", 404);
+        }
+
+        category.IsActive = true;
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return Result.Ok();
+    }
+
     private static CategoryResponse MapCategory(Category category) => new(category.Id, category.Name, category.Description, category.IsActive);
 }
 
-public sealed class SupplierService(ISupplierRepository suppliers, IUnitOfWork unitOfWork) : ISupplierService
+public sealed class SupplierService(ISupplierRepository suppliers, IUnitOfWork unitOfWork, IReactivationGuard reactivationGuard) : ISupplierService
 {
     public async Task<IReadOnlyList<SupplierResponse>> GetAllAsync(CancellationToken cancellationToken = default) =>
         (await suppliers.GetAllAsync(cancellationToken)).Select(MapSupplier).ToList();
@@ -241,6 +280,25 @@ public sealed class SupplierService(ISupplierRepository suppliers, IUnitOfWork u
         }
 
         supplier.IsActive = false;
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return Result.Ok();
+    }
+
+    public async Task<Result> ReactivateAsync(Guid id, ReactivateRequest request, CancellationToken cancellationToken = default)
+    {
+        var validation = reactivationGuard.Validate(request.Password);
+        if (!validation.Success)
+        {
+            return validation;
+        }
+
+        var supplier = await suppliers.GetByIdAsync(id, cancellationToken);
+        if (supplier is null)
+        {
+            return Result.Fail("Supplier not found.", 404);
+        }
+
+        supplier.IsActive = true;
         await unitOfWork.SaveChangesAsync(cancellationToken);
         return Result.Ok();
     }

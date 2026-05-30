@@ -58,7 +58,7 @@ public sealed class ProductServiceTests
                 UnitPrice = 50
             });
 
-        var service = new ProductService(products.Object, categories.Object, suppliers.Object, unitOfWork.Object);
+        var service = new ProductService(products.Object, categories.Object, suppliers.Object, unitOfWork.Object, Mock.Of<IReactivationGuard>());
 
         var result = await service.CreateAsync(new ProductCreateRequest("Scanner", null, "SCN-001", categoryId, supplierId, 5, 1, 50));
 
@@ -74,7 +74,7 @@ public sealed class ProductServiceTests
         products.Setup(x => x.GetBySkuAsync("DUP-001", It.IsAny<CancellationToken>()))
             .ReturnsAsync(new Product { SKU = "DUP-001" });
 
-        var service = new ProductService(products.Object, Mock.Of<ICategoryRepository>(), Mock.Of<ISupplierRepository>(), Mock.Of<IUnitOfWork>());
+        var service = new ProductService(products.Object, Mock.Of<ICategoryRepository>(), Mock.Of<ISupplierRepository>(), Mock.Of<IUnitOfWork>(), Mock.Of<IReactivationGuard>());
 
         var result = await service.CreateAsync(new ProductCreateRequest("Duplicated", null, "DUP-001", Guid.NewGuid(), Guid.NewGuid(), 1, 0, 10));
 

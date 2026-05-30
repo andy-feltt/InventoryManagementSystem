@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Navigate, NavLink, Route, Routes, useNavigate } from 'react-router-dom';
-import { AlertTriangle, Boxes, Gauge, Layers, LogOut, PackagePlus, Plus, Search, Truck, Warehouse } from 'lucide-react';
+import { AlertTriangle, Boxes, Gauge, KeyRound, Layers, LogOut, PackagePlus, Plus, Search, ShieldCheck, Truck, Warehouse } from 'lucide-react';
 import { AuthProvider, useAuth } from './auth/AuthContext';
 import { Alert, Button, Card, Input, LoadingSpinner, Modal, Select, Table } from './components/ui';
 import { dashboardService } from './api/dashboardService';
@@ -44,19 +44,27 @@ function LoginPage() {
   }
 
   return (
-    <main className="grid min-h-screen place-items-center bg-[#dfd79d] px-4">
-      <form onSubmit={submit} className="w-full max-w-md rounded-lg border border-[#d89a5a] bg-[#fffaf0] p-8 shadow-sm">
-        <div className="mb-8 flex items-center gap-3">
-          <div className="grid h-11 w-11 place-items-center rounded-md bg-[#e84416] text-white"><Warehouse /></div>
+    <main className="grid min-h-screen place-items-center bg-[#dfd79d] px-4 py-10">
+      <form onSubmit={submit} className="w-full max-w-[460px] rounded-lg border border-[#d89a5a] bg-[#fffaf0] p-7 shadow-sm sm:p-10">
+        <div className="mb-9 flex items-center gap-4">
+          <div className="grid h-12 w-12 shrink-0 place-items-center rounded-md bg-[#e84416] text-white shadow-sm"><Warehouse /></div>
           <div>
-            <h1 className="text-xl font-bold text-[#684134]">Inventory Management</h1>
-            <p className="text-sm text-[#8a5a45]">Operational stock control</p>
+            <h1 className="text-2xl font-bold text-[#684134]">Inventory Management</h1>
+            <p className="mt-1 text-sm text-[#8a5a45]">Sign in to manage stock operations</p>
           </div>
         </div>
-        <label className="mb-4 block text-sm font-medium text-[#684134]">Email<Input className="mt-1" placeholder="admin@inventory.local" value={email} onChange={(e) => setEmail(e.target.value)} type="email" required /></label>
-        <label className="mb-5 block text-sm font-medium text-[#684134]">Password<Input className="mt-1" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} type="password" required /></label>
+        <div className="space-y-5">
+          <label className="block text-sm font-semibold text-[#684134]">
+            Email
+            <Input className="mt-2" placeholder="admin@inventory.local" value={email} onChange={(e) => setEmail(e.target.value)} type="email" required />
+          </label>
+          <label className="block text-sm font-semibold text-[#684134]">
+            Password
+            <Input className="mt-2" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} type="password" required />
+          </label>
+        </div>
         {error && <div className="mb-4"><Alert tone="error">{error}</Alert></div>}
-        <Button className="w-full" disabled={loading}>{loading ? <LoadingSpinner /> : 'Sign in'}</Button>
+        <Button className="mt-7 w-full py-2.5" disabled={loading}>{loading ? <LoadingSpinner /> : 'Sign in'}</Button>
       </form>
     </main>
   );
@@ -151,6 +159,7 @@ function ProductsPage() {
   const [statusFilter, setStatusFilter] = useState<'active' | 'inactive' | 'all'>('active');
   const [editing, setEditing] = useState<Product | null>(null);
   const [creating, setCreating] = useState(false);
+  const [activating, setActivating] = useState<Product | null>(null);
 
   const load = useCallback(async () => {
     const isActive = statusFilter === 'all' ? null : statusFilter === 'active';
@@ -209,7 +218,11 @@ function ProductsPage() {
               <td className="px-4">
                 <div className="flex gap-2">
                   <Button variant="secondary" onClick={() => setEditing(p)}>Edit</Button>
-                  <Button variant="danger" onClick={() => productService.deactivate(p.id).then(load)}>Deactivate</Button>
+                  {p.isActive ? (
+                    <Button variant="danger" onClick={() => productService.deactivate(p.id).then(load)}>Deactivate</Button>
+                  ) : (
+                    <Button variant="secondary" onClick={() => setActivating(p)}><ShieldCheck size={16} /> Activate</Button>
+                  )}
                 </div>
               </td>
             </tr>
@@ -225,6 +238,18 @@ function ProductsPage() {
           onSaved={() => { setCreating(false); setEditing(null); void load(); }}
         />
       )}
+      {activating && (
+        <ActivationModal
+          title="Activate product"
+          label={activating.name}
+          onClose={() => setActivating(null)}
+          onConfirm={async (password) => {
+            await productService.activate(activating.id, password);
+            setActivating(null);
+            await load();
+          }}
+        />
+      )}
     </section>
   );
 }
@@ -236,9 +261,9 @@ function ProductForm({ product, categories, suppliers, onClose, onSaved }: { pro
     sku: product?.sku ?? '',
     categoryId: product?.categoryId ?? categories[0]?.id ?? '',
     supplierId: product?.supplierId ?? suppliers[0]?.id ?? '',
-    currentStock: product?.currentStock ?? 0,
-    minimumStock: product?.minimumStock ?? 0,
-    unitPrice: product?.unitPrice ?? 0,
+    currentStock: product ? String(product.currentStock) : '',
+    minimumStock: product ? String(product.minimumStock) : '',
+    unitPrice: product ? String(product.unitPrice) : '',
     isActive: product?.isActive ?? true,
   });
 
@@ -250,13 +275,19 @@ function ProductForm({ product, categories, suppliers, onClose, onSaved }: { pro
     }));
   }, [categories, suppliers]);
 
-  const set = (key: string, value: string | number | boolean) => setForm((current) => ({ ...current, [key]: value }));
+  const set = (key: string, value: string | boolean) => setForm((current) => ({ ...current, [key]: value }));
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
     if (!form.categoryId || !form.supplierId) return;
-    if (product) await productService.update(product.id, form);
-    else await productService.create(form);
+    const payload = {
+      ...form,
+      currentStock: Number(form.currentStock || 0),
+      minimumStock: Number(form.minimumStock || 0),
+      unitPrice: Number(form.unitPrice || 0),
+    };
+    if (product) await productService.update(product.id, payload);
+    else await productService.create(payload);
     onSaved();
   }
 
@@ -273,9 +304,9 @@ function ProductForm({ product, categories, suppliers, onClose, onSaved }: { pro
           <option value="" disabled>Select supplier</option>
           {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </Select>
-        <Input type="number" min="0" placeholder="Initial stock quantity" aria-label="Initial stock quantity" value={form.currentStock} onChange={(e) => set('currentStock', Number(e.target.value))} disabled={!!product} />
-        <Input type="number" min="0" placeholder="Minimum stock alert level" aria-label="Minimum stock alert level" value={form.minimumStock} onChange={(e) => set('minimumStock', Number(e.target.value))} />
-        <Input type="number" min="0" step="0.01" placeholder="Unit price" aria-label="Unit price" value={form.unitPrice} onChange={(e) => set('unitPrice', Number(e.target.value))} />
+        <Input type="number" min="0" placeholder="Initial stock quantity, e.g. 25" aria-label="Initial stock quantity" value={form.currentStock} onChange={(e) => set('currentStock', e.target.value)} disabled={!!product} />
+        <Input type="number" min="0" placeholder="Minimum stock alert level, e.g. 5" aria-label="Minimum stock alert level" value={form.minimumStock} onChange={(e) => set('minimumStock', e.target.value)} />
+        <Input type="number" min="0" step="0.01" placeholder="Unit price, e.g. 19.99" aria-label="Unit price" value={form.unitPrice} onChange={(e) => set('unitPrice', e.target.value)} />
         <Input placeholder="Short product description" value={form.description} onChange={(e) => set('description', e.target.value)} />
         <div className="md:col-span-2 flex justify-end gap-2">
           <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
@@ -290,6 +321,7 @@ function CategoriesPage() {
   const [items, setItems] = useState<Category[]>([]);
   const [editing, setEditing] = useState<Category | null>(null);
   const [creating, setCreating] = useState(false);
+  const [activating, setActivating] = useState<Category | null>(null);
   const load = useCallback(async () => setItems(await categoryService.list()), []);
   useDataRefresh(load);
 
@@ -301,8 +333,21 @@ function CategoriesPage() {
       onCreate={() => setCreating(true)}
       onEdit={setEditing}
       onDeactivate={(id) => categoryService.deactivate(id).then(load)}
+      onActivate={(item) => setActivating(item)}
     >
       {(creating || editing) && <CategoryForm category={editing} onClose={() => { setCreating(false); setEditing(null); }} onSaved={() => { setCreating(false); setEditing(null); void load(); }} />}
+      {activating && (
+        <ActivationModal
+          title="Activate category"
+          label={activating.name}
+          onClose={() => setActivating(null)}
+          onConfirm={async (password) => {
+            await categoryService.activate(activating.id, password);
+            setActivating(null);
+            await load();
+          }}
+        />
+      )}
     </SimpleCrud>
   );
 }
@@ -336,6 +381,7 @@ function SuppliersPage() {
   const [items, setItems] = useState<Supplier[]>([]);
   const [editing, setEditing] = useState<Supplier | null>(null);
   const [creating, setCreating] = useState(false);
+  const [activating, setActivating] = useState<Supplier | null>(null);
   const load = useCallback(async () => setItems(await supplierService.list()), []);
   useDataRefresh(load);
 
@@ -347,8 +393,21 @@ function SuppliersPage() {
       onCreate={() => setCreating(true)}
       onEdit={setEditing}
       onDeactivate={(id) => supplierService.deactivate(id).then(load)}
+      onActivate={(item) => setActivating(item)}
     >
       {(creating || editing) && <SupplierForm supplier={editing} onClose={() => { setCreating(false); setEditing(null); }} onSaved={() => { setCreating(false); setEditing(null); void load(); }} />}
+      {activating && (
+        <ActivationModal
+          title="Activate supplier"
+          label={activating.name}
+          onClose={() => setActivating(null)}
+          onConfirm={async (password) => {
+            await supplierService.activate(activating.id, password);
+            setActivating(null);
+            await load();
+          }}
+        />
+      )}
     </SimpleCrud>
   );
 }
@@ -384,7 +443,7 @@ function SupplierForm({ supplier, onClose, onSaved }: { supplier: Supplier | nul
 function MovementsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [movements, setMovements] = useState<InventoryMovement[]>([]);
-  const [form, setForm] = useState({ productId: '', type: 'Entry' as MovementType, quantity: 1, reason: '' });
+  const [form, setForm] = useState({ productId: '', type: 'Entry' as MovementType, quantity: '', reason: '' });
 
   const load = useCallback(async () => {
     const [productResult, latestMovements] = await Promise.all([productService.list(), inventoryMovementService.latest(50)]);
@@ -397,8 +456,8 @@ function MovementsPage() {
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
-    await inventoryMovementService.register(form);
-    setForm((current) => ({ ...current, quantity: 1, reason: '' }));
+    await inventoryMovementService.register({ ...form, quantity: Number(form.quantity || 0) });
+    setForm((current) => ({ ...current, quantity: '', reason: '' }));
     await load();
   }
 
@@ -416,7 +475,7 @@ function MovementsPage() {
             <option>Exit</option>
             <option>Adjustment</option>
           </Select>
-          <Input type="number" min="0" placeholder="Quantity" aria-label="Movement quantity" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })} />
+          <Input type="number" min="0" placeholder="Movement quantity, e.g. 10" aria-label="Movement quantity" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} />
           <Input placeholder="Reason for movement" value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} required />
           <Button disabled={!form.productId}>Register</Button>
         </form>
@@ -458,7 +517,43 @@ function MovementsTable({ movements }: { movements: InventoryMovement[] }) {
   );
 }
 
-function SimpleCrud<T extends { id: string }>({ title, items, columns, children, onCreate, onEdit, onDeactivate }: { title: string; items: T[]; columns: Extract<keyof T, string>[]; children: React.ReactNode; onCreate: () => void; onEdit: (item: T) => void; onDeactivate: (id: string) => void }) {
+function ActivationModal({ title, label, onClose, onConfirm }: { title: string; label: string; onClose: () => void; onConfirm: (password: string) => Promise<void> }) {
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      await onConfirm(password);
+    } catch {
+      setError('Invalid reactivation password.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Modal title={title} onClose={onClose}>
+      <form onSubmit={submit} className="space-y-4">
+        <div className="rounded-md border border-[#d9cf93] bg-[#f7f2d3] px-3 py-2 text-sm text-[#684134]">
+          <div className="flex items-center gap-2 font-semibold"><KeyRound size={16} /> Security check</div>
+          <p className="mt-1 text-[#8a5a45]">Enter the reactivation password to activate {label} again.</p>
+        </div>
+        <Input type="password" placeholder="Reactivation password" value={password} onChange={(e) => setPassword(e.target.value)} required autoFocus />
+        {error && <Alert tone="error">{error}</Alert>}
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
+          <Button disabled={loading}>{loading ? <LoadingSpinner /> : 'Activate'}</Button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+function SimpleCrud<T extends { id: string; isActive?: boolean; name?: string }>({ title, items, columns, children, onCreate, onEdit, onDeactivate, onActivate }: { title: string; items: T[]; columns: Extract<keyof T, string>[]; children: React.ReactNode; onCreate: () => void; onEdit: (item: T) => void; onDeactivate: (id: string) => void; onActivate: (item: T) => void }) {
   return (
     <section className="space-y-4">
       <PageTitle title={title} action={<Button onClick={onCreate}><Plus size={16} /> New</Button>} />
@@ -476,7 +571,11 @@ function SimpleCrud<T extends { id: string }>({ title, items, columns, children,
               <td className="px-4">
                 <div className="flex gap-2">
                   <Button variant="secondary" onClick={() => onEdit(item)}>Edit</Button>
-                  <Button variant="danger" onClick={() => onDeactivate(String(item.id))}>Deactivate</Button>
+                  {item.isActive === false ? (
+                    <Button variant="secondary" onClick={() => onActivate(item)}><ShieldCheck size={16} /> Activate</Button>
+                  ) : (
+                    <Button variant="danger" onClick={() => onDeactivate(String(item.id))}>Deactivate</Button>
+                  )}
                 </div>
               </td>
             </tr>

@@ -66,6 +66,8 @@ public sealed record CategoryResponse(Guid Id, string Name, string? Description,
 public sealed record SupplierRequest(string Name, string? ContactName, string? Email, string? Phone, string? Address);
 public sealed record SupplierResponse(Guid Id, string Name, string? ContactName, string? Email, string? Phone, string? Address, bool IsActive);
 
+public sealed record ReactivateRequest(string Password);
+
 public sealed record InventoryMovementRequest(Guid ProductId, MovementType Type, int Quantity, string Reason);
 public sealed record InventoryMovementResponse(
     Guid Id,
@@ -102,6 +104,7 @@ public interface IProductService
     Task<Result<ProductResponse>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<Result<ProductResponse>> UpdateAsync(Guid id, ProductUpdateRequest request, CancellationToken cancellationToken = default);
     Task<Result> DeactivateAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<Result> ReactivateAsync(Guid id, ReactivateRequest request, CancellationToken cancellationToken = default);
 }
 
 public interface ICategoryService
@@ -110,6 +113,7 @@ public interface ICategoryService
     Task<Result<CategoryResponse>> CreateAsync(CategoryRequest request, CancellationToken cancellationToken = default);
     Task<Result<CategoryResponse>> UpdateAsync(Guid id, CategoryRequest request, CancellationToken cancellationToken = default);
     Task<Result> DeactivateAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<Result> ReactivateAsync(Guid id, ReactivateRequest request, CancellationToken cancellationToken = default);
 }
 
 public interface ISupplierService
@@ -118,6 +122,7 @@ public interface ISupplierService
     Task<Result<SupplierResponse>> CreateAsync(SupplierRequest request, CancellationToken cancellationToken = default);
     Task<Result<SupplierResponse>> UpdateAsync(Guid id, SupplierRequest request, CancellationToken cancellationToken = default);
     Task<Result> DeactivateAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<Result> ReactivateAsync(Guid id, ReactivateRequest request, CancellationToken cancellationToken = default);
 }
 
 public interface IInventoryMovementService
@@ -141,6 +146,11 @@ public interface IPasswordHasher
 public interface ITokenService
 {
     AuthResponse CreateToken(User user);
+}
+
+public interface IReactivationGuard
+{
+    Result Validate(string password);
 }
 
 public interface IUnitOfWork

@@ -21,4 +21,8 @@ export const supplierService = {
     await apiClient.delete(`/suppliers/${id}`);
     notifyDataChanged();
   },
+  async activate(id: string, password: string) {
+    await apiClient.patch(`/suppliers/${id}/activate`, { password });
+    notifyDataChanged();
+  },
 };

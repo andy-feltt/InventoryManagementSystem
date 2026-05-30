@@ -28,8 +28,8 @@ See [docs/architecture.md](docs/architecture.md).
 
 - JWT login and authenticated profile endpoint.
 - Roles: Admin and Employee.
-- Product management with SKU uniqueness and logical deactivation.
-- Category and supplier CRUD with logical deactivation.
+- Product management with SKU uniqueness, logical deactivation and protected reactivation.
+- Category and supplier CRUD with logical deactivation and protected reactivation.
 - Inventory entries, exits and manual adjustments.
 - Prevents stock exits that would create negative stock.
 - Dashboard metrics and latest movements.
@@ -85,6 +85,7 @@ docker compose up --build
 
 - Email: read from `SEED_ADMIN_EMAIL`
 - Password: read from `SEED_ADMIN_PASSWORD`
+- Reactivation password: read from `REACTIVATE_PASSWORD`
 
 For local development this project can load these values from `backend/.env`. Seed data is created automatically when the API starts.
 

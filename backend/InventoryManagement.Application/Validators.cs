@@ -81,6 +81,14 @@ public sealed class SupplierRequestValidator : AbstractValidator<SupplierRequest
     }
 }
 
+public sealed class ReactivateRequestValidator : AbstractValidator<ReactivateRequest>
+{
+    public ReactivateRequestValidator()
+    {
+        RuleFor(x => x.Password).NotEmpty().MaximumLength(128);
+    }
+}
+
 public sealed class InventoryMovementRequestValidator : AbstractValidator<InventoryMovementRequest>
 {
     public InventoryMovementRequestValidator()

@@ -23,4 +23,8 @@ export const productService = {
     await apiClient.delete(`/products/${id}`);
     notifyDataChanged();
   },
+  async activate(id: string, password: string) {
+    await apiClient.patch(`/products/${id}/activate`, { password });
+    notifyDataChanged();
+  },
 };
