@@ -32,6 +32,7 @@ See [docs/architecture.md](docs/architecture.md).
 - Category and supplier CRUD with logical deactivation and protected reactivation.
 - Inventory entries, exits and manual adjustments.
 - Prevents stock exits that would create negative stock.
+- Admin section for protected permanent deletes.
 - Dashboard metrics and latest movements.
 - Swagger documentation with Bearer token support.
 - Responsive React UI with protected routes.

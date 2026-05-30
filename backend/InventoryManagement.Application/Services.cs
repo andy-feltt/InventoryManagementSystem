@@ -360,3 +360,103 @@ public sealed class DashboardService(IProductRepository products, ISupplierRepos
         await products.EstimatedValueAsync(cancellationToken),
         (await movements.GetLatestAsync(5, cancellationToken)).Select(InventoryMovementService.MapMovement).ToList());
 }
+
+public sealed class AdminService(
+    IProductRepository products,
+    ICategoryRepository categories,
+    ISupplierRepository suppliers,
+    IInventoryMovementRepository movements,
+    IUnitOfWork unitOfWork,
+    IReactivationGuard reactivationGuard) : IAdminService
+{
+    public async Task<Result> DeleteProductAsync(Guid id, ProtectedDeleteRequest request, CancellationToken cancellationToken = default)
+    {
+        var validation = reactivationGuard.Validate(request.Password);
+        if (!validation.Success)
+        {
+            return validation;
+        }
+
+        var product = await products.GetByIdAsync(id, cancellationToken);
+        if (product is null)
+        {
+            return Result.Fail("Product not found.", 404);
+        }
+
+        if (await products.HasMovementsAsync(id, cancellationToken))
+        {
+            return Result.Fail("Product has inventory movements. Delete its movement history first or keep it deactivated.", 409);
+        }
+
+        products.Remove(product);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return Result.Ok();
+    }
+
+    public async Task<Result> DeleteCategoryAsync(Guid id, ProtectedDeleteRequest request, CancellationToken cancellationToken = default)
+    {
+        var validation = reactivationGuard.Validate(request.Password);
+        if (!validation.Success)
+        {
+            return validation;
+        }
+
+        var category = await categories.GetByIdAsync(id, cancellationToken);
+        if (category is null)
+        {
+            return Result.Fail("Category not found.", 404);
+        }
+
+        if (await categories.HasProductsAsync(id, cancellationToken))
+        {
+            return Result.Fail("Category is assigned to products. Reassign or delete those products first.", 409);
+        }
+
+        categories.Remove(category);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return Result.Ok();
+    }
+
+    public async Task<Result> DeleteSupplierAsync(Guid id, ProtectedDeleteRequest request, CancellationToken cancellationToken = default)
+    {
+        var validation = reactivationGuard.Validate(request.Password);
+        if (!validation.Success)
+        {
+            return validation;
+        }
+
+        var supplier = await suppliers.GetByIdAsync(id, cancellationToken);
+        if (supplier is null)
+        {
+            return Result.Fail("Supplier not found.", 404);
+        }
+
+        if (await suppliers.HasProductsAsync(id, cancellationToken))
+        {
+            return Result.Fail("Supplier is assigned to products. Reassign or delete those products first.", 409);
+        }
+
+        suppliers.Remove(supplier);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return Result.Ok();
+    }
+
+    public async Task<Result> DeleteInventoryMovementAsync(Guid id, ProtectedDeleteRequest request, CancellationToken cancellationToken = default)
+    {
+        var validation = reactivationGuard.Validate(request.Password);
+        if (!validation.Success)
+        {
+            return validation;
+        }
+
+        var movement = await movements.GetByIdAsync(id, cancellationToken);
+        if (movement is null)
+        {
+            return Result.Fail("Inventory movement not found.", 404);
+        }
+
+        movements.Remove(movement);
+        await unitOfWork.SaveChangesAsync(cancellationToken);
+        return Result.Ok();
+    }
+}

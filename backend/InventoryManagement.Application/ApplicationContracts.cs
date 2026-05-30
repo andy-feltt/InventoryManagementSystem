@@ -67,6 +67,7 @@ public sealed record SupplierRequest(string Name, string? ContactName, string? E
 public sealed record SupplierResponse(Guid Id, string Name, string? ContactName, string? Email, string? Phone, string? Address, bool IsActive);
 
 public sealed record ReactivateRequest(string Password);
+public sealed record ProtectedDeleteRequest(string Password);
 
 public sealed record InventoryMovementRequest(Guid ProductId, MovementType Type, int Quantity, string Reason);
 public sealed record InventoryMovementResponse(
@@ -137,6 +138,14 @@ public interface IDashboardService
     Task<DashboardResponse> GetAsync(CancellationToken cancellationToken = default);
 }
 
+public interface IAdminService
+{
+    Task<Result> DeleteProductAsync(Guid id, ProtectedDeleteRequest request, CancellationToken cancellationToken = default);
+    Task<Result> DeleteCategoryAsync(Guid id, ProtectedDeleteRequest request, CancellationToken cancellationToken = default);
+    Task<Result> DeleteSupplierAsync(Guid id, ProtectedDeleteRequest request, CancellationToken cancellationToken = default);
+    Task<Result> DeleteInventoryMovementAsync(Guid id, ProtectedDeleteRequest request, CancellationToken cancellationToken = default);
+}
+
 public interface IPasswordHasher
 {
     string Hash(string password);
@@ -175,6 +184,8 @@ public interface IProductRepository
     Task<int> CountActiveAsync(CancellationToken cancellationToken = default);
     Task<int> CountLowStockAsync(CancellationToken cancellationToken = default);
     Task<decimal> EstimatedValueAsync(CancellationToken cancellationToken = default);
+    Task<bool> HasMovementsAsync(Guid productId, CancellationToken cancellationToken = default);
+    void Remove(Product product);
 }
 
 public interface ICategoryRepository
@@ -182,6 +193,8 @@ public interface ICategoryRepository
     Task<IReadOnlyList<Category>> GetAllAsync(CancellationToken cancellationToken = default);
     Task<Category?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task AddAsync(Category category, CancellationToken cancellationToken = default);
+    Task<bool> HasProductsAsync(Guid categoryId, CancellationToken cancellationToken = default);
+    void Remove(Category category);
 }
 
 public interface ISupplierRepository
@@ -190,11 +203,15 @@ public interface ISupplierRepository
     Task<Supplier?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<int> CountActiveAsync(CancellationToken cancellationToken = default);
     Task AddAsync(Supplier supplier, CancellationToken cancellationToken = default);
+    Task<bool> HasProductsAsync(Guid supplierId, CancellationToken cancellationToken = default);
+    void Remove(Supplier supplier);
 }
 
 public interface IInventoryMovementRepository
 {
     Task AddAsync(InventoryMovement movement, CancellationToken cancellationToken = default);
+    Task<InventoryMovement?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<InventoryMovement>> GetByProductAsync(Guid productId, CancellationToken cancellationToken = default);
     Task<IReadOnlyList<InventoryMovement>> GetLatestAsync(int take, CancellationToken cancellationToken = default);
+    void Remove(InventoryMovement movement);
 }

@@ -138,6 +138,8 @@ public sealed class ProductRepository(InventoryDbContext db) : IProductRepositor
     public Task<int> CountActiveAsync(CancellationToken cancellationToken = default) => db.Products.CountAsync(x => x.IsActive, cancellationToken);
     public Task<int> CountLowStockAsync(CancellationToken cancellationToken = default) => db.Products.CountAsync(x => x.IsActive && x.CurrentStock <= x.MinimumStock, cancellationToken);
     public Task<decimal> EstimatedValueAsync(CancellationToken cancellationToken = default) => db.Products.Where(x => x.IsActive).SumAsync(x => x.UnitPrice * x.CurrentStock, cancellationToken);
+    public Task<bool> HasMovementsAsync(Guid productId, CancellationToken cancellationToken = default) => db.InventoryMovements.AnyAsync(x => x.ProductId == productId, cancellationToken);
+    public void Remove(Product product) => db.Products.Remove(product);
 }
 
 public sealed class CategoryRepository(InventoryDbContext db) : ICategoryRepository
@@ -145,6 +147,8 @@ public sealed class CategoryRepository(InventoryDbContext db) : ICategoryReposit
     public async Task<IReadOnlyList<Category>> GetAllAsync(CancellationToken cancellationToken = default) => await db.Categories.OrderBy(x => x.Name).ToListAsync(cancellationToken);
     public Task<Category?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) => db.Categories.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     public async Task AddAsync(Category category, CancellationToken cancellationToken = default) => await db.Categories.AddAsync(category, cancellationToken);
+    public Task<bool> HasProductsAsync(Guid categoryId, CancellationToken cancellationToken = default) => db.Products.AnyAsync(x => x.CategoryId == categoryId, cancellationToken);
+    public void Remove(Category category) => db.Categories.Remove(category);
 }
 
 public sealed class SupplierRepository(InventoryDbContext db) : ISupplierRepository
@@ -153,11 +157,16 @@ public sealed class SupplierRepository(InventoryDbContext db) : ISupplierReposit
     public Task<Supplier?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) => db.Suppliers.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
     public Task<int> CountActiveAsync(CancellationToken cancellationToken = default) => db.Suppliers.CountAsync(x => x.IsActive, cancellationToken);
     public async Task AddAsync(Supplier supplier, CancellationToken cancellationToken = default) => await db.Suppliers.AddAsync(supplier, cancellationToken);
+    public Task<bool> HasProductsAsync(Guid supplierId, CancellationToken cancellationToken = default) => db.Products.AnyAsync(x => x.SupplierId == supplierId, cancellationToken);
+    public void Remove(Supplier supplier) => db.Suppliers.Remove(supplier);
 }
 
 public sealed class InventoryMovementRepository(InventoryDbContext db) : IInventoryMovementRepository
 {
     public async Task AddAsync(InventoryMovement movement, CancellationToken cancellationToken = default) => await db.InventoryMovements.AddAsync(movement, cancellationToken);
+
+    public Task<InventoryMovement?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default) =>
+        db.InventoryMovements.FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
 
     public async Task<IReadOnlyList<InventoryMovement>> GetByProductAsync(Guid productId, CancellationToken cancellationToken = default) =>
         await Query().Where(x => x.ProductId == productId).OrderByDescending(x => x.CreatedAt).ToListAsync(cancellationToken);
@@ -166,6 +175,7 @@ public sealed class InventoryMovementRepository(InventoryDbContext db) : IInvent
         await Query().OrderByDescending(x => x.CreatedAt).Take(take).ToListAsync(cancellationToken);
 
     private IQueryable<InventoryMovement> Query() => db.InventoryMovements.Include(x => x.Product).Include(x => x.CreatedByUser);
+    public void Remove(InventoryMovement movement) => db.InventoryMovements.Remove(movement);
 }
 
 public sealed class DatabaseSeeder(InventoryDbContext db, IPasswordHasher passwordHasher, IConfiguration configuration)

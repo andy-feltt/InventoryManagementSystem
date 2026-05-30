@@ -25,3 +25,7 @@
 | GET | `/api/inventory-movements/latest` | Get latest inventory movements | Yes | Admin, Employee |
 | GET | `/api/inventory-movements/product/{productId}` | Get movement history by product | Yes | Admin, Employee |
 | POST | `/api/inventory-movements` | Register entry, exit or adjustment | Yes | Admin, Employee |
+| DELETE | `/api/admin/products/{id}` | Permanently delete product with protected action password | Yes | Admin |
+| DELETE | `/api/admin/categories/{id}` | Permanently delete category with protected action password | Yes | Admin |
+| DELETE | `/api/admin/suppliers/{id}` | Permanently delete supplier with protected action password | Yes | Admin |
+| DELETE | `/api/admin/inventory-movements/{id}` | Permanently delete inventory movement with protected action password | Yes | Admin |

@@ -394,4 +394,37 @@ namespace InventoryManagement.Api
         [HttpGet]
         public Task<DashboardResponse> Get(CancellationToken cancellationToken) => dashboard.GetAsync(cancellationToken);
     }
+
+    [Authorize(Roles = "Admin")]
+    [Route("api/admin")]
+    public sealed class AdminController(IAdminService admin, IValidator<ProtectedDeleteRequest> deleteValidator) : ApiControllerBase
+    {
+        [HttpDelete("products/{id:guid}")]
+        public async Task<IActionResult> DeleteProduct(Guid id, ProtectedDeleteRequest request, CancellationToken cancellationToken)
+        {
+            var invalid = await ValidateAsync(deleteValidator, request, cancellationToken);
+            return invalid ?? FromResult(await admin.DeleteProductAsync(id, request, cancellationToken));
+        }
+
+        [HttpDelete("categories/{id:guid}")]
+        public async Task<IActionResult> DeleteCategory(Guid id, ProtectedDeleteRequest request, CancellationToken cancellationToken)
+        {
+            var invalid = await ValidateAsync(deleteValidator, request, cancellationToken);
+            return invalid ?? FromResult(await admin.DeleteCategoryAsync(id, request, cancellationToken));
+        }
+
+        [HttpDelete("suppliers/{id:guid}")]
+        public async Task<IActionResult> DeleteSupplier(Guid id, ProtectedDeleteRequest request, CancellationToken cancellationToken)
+        {
+            var invalid = await ValidateAsync(deleteValidator, request, cancellationToken);
+            return invalid ?? FromResult(await admin.DeleteSupplierAsync(id, request, cancellationToken));
+        }
+
+        [HttpDelete("inventory-movements/{id:guid}")]
+        public async Task<IActionResult> DeleteInventoryMovement(Guid id, ProtectedDeleteRequest request, CancellationToken cancellationToken)
+        {
+            var invalid = await ValidateAsync(deleteValidator, request, cancellationToken);
+            return invalid ?? FromResult(await admin.DeleteInventoryMovementAsync(id, request, cancellationToken));
+        }
+    }
 }

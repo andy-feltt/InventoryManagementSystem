@@ -15,6 +15,7 @@ public static class DependencyInjection
         services.AddScoped<ISupplierService, SupplierService>();
         services.AddScoped<IInventoryMovementService, InventoryMovementService>();
         services.AddScoped<IDashboardService, DashboardService>();
+        services.AddScoped<IAdminService, AdminService>();
         return services;
     }
 }
@@ -84,6 +85,14 @@ public sealed class SupplierRequestValidator : AbstractValidator<SupplierRequest
 public sealed class ReactivateRequestValidator : AbstractValidator<ReactivateRequest>
 {
     public ReactivateRequestValidator()
+    {
+        RuleFor(x => x.Password).NotEmpty().MaximumLength(128);
+    }
+}
+
+public sealed class ProtectedDeleteRequestValidator : AbstractValidator<ProtectedDeleteRequest>
+{
+    public ProtectedDeleteRequestValidator()
     {
         RuleFor(x => x.Password).NotEmpty().MaximumLength(128);
     }
