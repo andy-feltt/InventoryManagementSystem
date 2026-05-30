@@ -6,7 +6,7 @@
 | POST | `/api/auth/login` | Login and receive a JWT | No | Public |
 | GET | `/api/auth/me` | Get authenticated user profile | Yes | Admin, Employee |
 | GET | `/api/dashboard` | Get dashboard metrics | Yes | Admin, Employee |
-| GET | `/api/products` | Get paginated products with search and category filter | Yes | Admin, Employee |
+| GET | `/api/products` | Get paginated products with search, category and `isActive` filters | Yes | Admin, Employee |
 | GET | `/api/products/{id}` | Get product details | Yes | Admin, Employee |
 | POST | `/api/products` | Create product | Yes | Admin |
 | PUT | `/api/products/{id}` | Update product | Yes | Admin |

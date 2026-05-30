@@ -110,7 +110,7 @@ public sealed class ProductRepository(InventoryDbContext db) : IProductRepositor
     public Task<Product?> GetBySkuAsync(string sku, CancellationToken cancellationToken = default) =>
         db.Products.FirstOrDefaultAsync(x => x.SKU == sku.ToUpperInvariant(), cancellationToken);
 
-    public async Task<(IReadOnlyList<Product> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, string? search, Guid? categoryId, CancellationToken cancellationToken = default)
+    public async Task<(IReadOnlyList<Product> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, string? search, Guid? categoryId, bool? isActive, CancellationToken cancellationToken = default)
     {
         var query = db.Products.Include(x => x.Category).Include(x => x.Supplier).AsQueryable();
 
@@ -123,6 +123,11 @@ public sealed class ProductRepository(InventoryDbContext db) : IProductRepositor
         if (categoryId.HasValue)
         {
             query = query.Where(x => x.CategoryId == categoryId.Value);
+        }
+
+        if (isActive.HasValue)
+        {
+            query = query.Where(x => x.IsActive == isActive.Value);
         }
 
         var total = await query.CountAsync(cancellationToken);

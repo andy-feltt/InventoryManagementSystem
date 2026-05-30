@@ -98,7 +98,7 @@ public interface IAuthService
 public interface IProductService
 {
     Task<Result<ProductResponse>> CreateAsync(ProductCreateRequest request, CancellationToken cancellationToken = default);
-    Task<PagedResult<ProductResponse>> GetPagedAsync(int page, int pageSize, string? search, Guid? categoryId, CancellationToken cancellationToken = default);
+    Task<PagedResult<ProductResponse>> GetPagedAsync(int page, int pageSize, string? search, Guid? categoryId, bool? isActive, CancellationToken cancellationToken = default);
     Task<Result<ProductResponse>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<Result<ProductResponse>> UpdateAsync(Guid id, ProductUpdateRequest request, CancellationToken cancellationToken = default);
     Task<Result> DeactivateAsync(Guid id, CancellationToken cancellationToken = default);
@@ -161,7 +161,7 @@ public interface IProductRepository
     Task AddAsync(Product product, CancellationToken cancellationToken = default);
     Task<Product?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
     Task<Product?> GetBySkuAsync(string sku, CancellationToken cancellationToken = default);
-    Task<(IReadOnlyList<Product> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, string? search, Guid? categoryId, CancellationToken cancellationToken = default);
+    Task<(IReadOnlyList<Product> Items, int TotalCount)> GetPagedAsync(int page, int pageSize, string? search, Guid? categoryId, bool? isActive, CancellationToken cancellationToken = default);
     Task<int> CountActiveAsync(CancellationToken cancellationToken = default);
     Task<int> CountLowStockAsync(CancellationToken cancellationToken = default);
     Task<decimal> EstimatedValueAsync(CancellationToken cancellationToken = default);

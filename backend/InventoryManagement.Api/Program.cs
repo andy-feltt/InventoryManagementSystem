@@ -56,8 +56,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddAuthorization();
 builder.Services.AddCors(options =>
 {
+    var allowedOrigins = (builder.Configuration["Frontend:AllowedOrigins"] ?? builder.Configuration["Frontend:Url"] ?? "http://localhost:5173;http://127.0.0.1:5173")
+        .Split(';', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+
     options.AddPolicy("Frontend", policy =>
-        policy.WithOrigins(builder.Configuration["Frontend:Url"] ?? "http://localhost:5173")
+        policy.WithOrigins(allowedOrigins)
             .AllowAnyHeader()
             .AllowAnyMethod());
 });
@@ -241,8 +244,8 @@ namespace InventoryManagement.Api
     public sealed class ProductsController(IProductService products, IValidator<ProductCreateRequest> createValidator, IValidator<ProductUpdateRequest> updateValidator) : ApiControllerBase
     {
         [HttpGet]
-        public Task<PagedResult<ProductResponse>> Get([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? search = null, [FromQuery] Guid? categoryId = null, CancellationToken cancellationToken = default) =>
-            products.GetPagedAsync(page, pageSize, search, categoryId, cancellationToken);
+        public Task<PagedResult<ProductResponse>> Get([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? search = null, [FromQuery] Guid? categoryId = null, [FromQuery] bool? isActive = null, CancellationToken cancellationToken = default) =>
+            products.GetPagedAsync(page, pageSize, search, categoryId, isActive, cancellationToken);
 
         [HttpGet("{id:guid}")]
         public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken) => FromResult(await products.GetByIdAsync(id, cancellationToken));

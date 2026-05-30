@@ -148,13 +148,15 @@ function ProductsPage() {
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [search, setSearch] = useState('');
   const [categoryId, setCategoryId] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'active' | 'inactive' | 'all'>('active');
   const [editing, setEditing] = useState<Product | null>(null);
   const [creating, setCreating] = useState(false);
 
   const load = useCallback(async () => {
-    const result = await productService.list(search, categoryId);
+    const isActive = statusFilter === 'all' ? null : statusFilter === 'active';
+    const result = await productService.list(search, categoryId, isActive);
     setProducts(result.items);
-  }, [search, categoryId]);
+  }, [search, categoryId, statusFilter]);
 
   const loadLookups = useCallback(async () => {
     const [nextCategories, nextSuppliers] = await Promise.all([categoryService.list(), supplierService.list()]);
@@ -168,7 +170,7 @@ function ProductsPage() {
   return (
     <section className="space-y-4">
       <PageTitle title="Products" action={<Button onClick={() => setCreating(true)}><Plus size={16} /> New product</Button>} />
-      <div className="grid gap-3 md:grid-cols-[1fr_260px]">
+      <div className="grid gap-3 md:grid-cols-[1fr_220px_180px]">
         <div className="relative">
           <Search className="absolute left-3 top-2.5 text-[#8a5a45]" size={18} />
           <Input className="pl-10" placeholder="Search by name, SKU or category" value={search} onChange={(e) => setSearch(e.target.value)} />
@@ -176,6 +178,11 @@ function ProductsPage() {
         <Select value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
           <option value="">All categories</option>
           {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+        </Select>
+        <Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value as 'active' | 'inactive' | 'all')}>
+          <option value="active">Active products</option>
+          <option value="inactive">Inactive products</option>
+          <option value="all">All statuses</option>
         </Select>
       </div>
       <Table>

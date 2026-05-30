@@ -81,11 +81,11 @@ public sealed class ProductService(IProductRepository products, ICategoryReposit
         return Result<ProductResponse>.Ok(MapProduct(product));
     }
 
-    public async Task<PagedResult<ProductResponse>> GetPagedAsync(int page, int pageSize, string? search, Guid? categoryId, CancellationToken cancellationToken = default)
+    public async Task<PagedResult<ProductResponse>> GetPagedAsync(int page, int pageSize, string? search, Guid? categoryId, bool? isActive, CancellationToken cancellationToken = default)
     {
         page = Math.Max(1, page);
         pageSize = Math.Clamp(pageSize, 1, 100);
-        var (items, totalCount) = await products.GetPagedAsync(page, pageSize, search, categoryId, cancellationToken);
+        var (items, totalCount) = await products.GetPagedAsync(page, pageSize, search, categoryId, isActive, cancellationToken);
         return new PagedResult<ProductResponse>(items.Select(MapProduct).ToList(), page, pageSize, totalCount);
     }
 
