@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Text.Json.Serialization;
 using FluentValidation;
 using InventoryManagement.Api;
 using InventoryManagement.Application;
@@ -26,7 +27,8 @@ builder.Host.UseSerilog((context, configuration) =>
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddScoped<ITokenService, JwtTokenService>();
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options => options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 builder.Services.AddEndpointsApiExplorer();
 
 var jwt = builder.Configuration.GetSection("Jwt");
