@@ -4,11 +4,11 @@ Professional fullstack inventory management system built as a portfolio project 
 
 ## Objective
 
-Demonstrate practical experience with .NET 10, ASP.NET Core Web API, React, TypeScript, SQL Server, Entity Framework Core, JWT, Docker, unit testing, Swagger, GitHub Actions and Clean Architecture.
+Demonstrate practical experience with .NET 10, ASP.NET Core Web API, React, TypeScript, PostgreSQL, Entity Framework Core, JWT, Docker, unit testing, Swagger, GitHub Actions and Clean Architecture.
 
 ## Tech Stack
 
-- Backend: .NET 10, ASP.NET Core Web API, EF Core, SQL Server, JWT, FluentValidation, Serilog, Swagger.
+- Backend: .NET 10, ASP.NET Core Web API, EF Core, PostgreSQL, JWT, FluentValidation, Serilog, Swagger.
 - Frontend: React, TypeScript, Vite, TailwindCSS, Axios, React Router, Context API.
 - Testing: xUnit, Moq, FluentAssertions.
 - DevOps: Docker, Docker Compose, GitHub Actions CI.
@@ -19,7 +19,7 @@ The backend uses Clean Architecture:
 
 - `InventoryManagement.Domain`: entities, enums and inventory business rules.
 - `InventoryManagement.Application`: DTOs, validators, repository contracts and use-case services.
-- `InventoryManagement.Infrastructure`: EF Core, SQL Server repositories, migrations and seed data.
+- `InventoryManagement.Infrastructure`: EF Core, PostgreSQL repositories, migrations and seed data.
 - `InventoryManagement.Api`: controllers, JWT, Swagger, CORS and middleware.
 
 See [docs/architecture.md](docs/architecture.md).
@@ -42,7 +42,7 @@ Screenshots can be added under [docs/screenshots](docs/screenshots).
 
 ## Run Locally
 
-Requirements: .NET 10 SDK, Node.js 24+, SQL Server.
+Requirements: .NET 10 SDK, Node.js 24+, PostgreSQL on the default port `5432`.
 
 ```bash
 cd backend
@@ -61,6 +61,18 @@ npm run dev
 Frontend default: `http://localhost:5173`  
 API default: `http://localhost:5000`  
 Swagger: `http://localhost:5000/swagger`
+
+The default local connection string assumes PostgreSQL on `localhost:5432` with database `inventory_management`, user `postgres` and password `postgres`:
+
+```text
+Host=localhost;Port=5432;Database=inventory_management;Username=postgres;Password=postgres
+```
+
+If your local PostgreSQL installer uses a different password for `postgres`, override it without editing source files:
+
+```bash
+set ConnectionStrings__DefaultConnection=Host=localhost;Port=5432;Database=inventory_management;Username=postgres;Password=YOUR_PASSWORD
+```
 
 ## Run With Docker
 

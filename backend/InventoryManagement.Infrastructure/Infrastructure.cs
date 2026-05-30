@@ -46,7 +46,7 @@ public sealed class InventoryDbContext(DbContextOptions<InventoryDbContext> opti
             entity.Property(x => x.Name).HasMaxLength(160).IsRequired();
             entity.Property(x => x.Description).HasMaxLength(500);
             entity.Property(x => x.SKU).HasMaxLength(64).IsRequired();
-            entity.Property(x => x.UnitPrice).HasColumnType("decimal(18,2)");
+            entity.Property(x => x.UnitPrice).HasColumnType("numeric(18,2)");
             entity.HasOne(x => x.Category).WithMany(x => x.Products).HasForeignKey(x => x.CategoryId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne(x => x.Supplier).WithMany(x => x.Products).HasForeignKey(x => x.SupplierId).OnDelete(DeleteBehavior.Restrict);
         });
@@ -69,7 +69,7 @@ public static class DependencyInjection
             ?? configuration["ConnectionStrings__DefaultConnection"]
             ?? throw new InvalidOperationException("DefaultConnection is not configured.");
 
-        services.AddDbContext<InventoryDbContext>(options => options.UseSqlServer(connectionString));
+        services.AddDbContext<InventoryDbContext>(options => options.UseNpgsql(connectionString));
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<InventoryDbContext>());
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IProductRepository, ProductRepository>();

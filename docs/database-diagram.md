@@ -8,57 +8,57 @@ erDiagram
     PRODUCTS ||--o{ INVENTORY_MOVEMENTS : tracks
 
     USERS {
-        uniqueidentifier Id PK
-        nvarchar FullName
-        nvarchar Email UK
-        nvarchar PasswordHash
-        nvarchar Role
-        datetime CreatedAt
-        bit IsActive
+        uuid Id PK
+        varchar FullName
+        varchar Email UK
+        varchar PasswordHash
+        varchar Role
+        timestamp CreatedAt
+        boolean IsActive
     }
 
     CATEGORIES {
-        uniqueidentifier Id PK
-        nvarchar Name
-        nvarchar Description
-        bit IsActive
+        uuid Id PK
+        varchar Name
+        varchar Description
+        boolean IsActive
     }
 
     SUPPLIERS {
-        uniqueidentifier Id PK
-        nvarchar Name
-        nvarchar ContactName
-        nvarchar Email
-        nvarchar Phone
-        nvarchar Address
-        bit IsActive
+        uuid Id PK
+        varchar Name
+        varchar ContactName
+        varchar Email
+        varchar Phone
+        varchar Address
+        boolean IsActive
     }
 
     PRODUCTS {
-        uniqueidentifier Id PK
-        nvarchar Name
-        nvarchar Description
-        nvarchar SKU UK
-        uniqueidentifier CategoryId FK
-        uniqueidentifier SupplierId FK
+        uuid Id PK
+        varchar Name
+        varchar Description
+        varchar SKU UK
+        uuid CategoryId FK
+        uuid SupplierId FK
         int CurrentStock
         int MinimumStock
-        decimal UnitPrice
-        bit IsActive
-        datetime CreatedAt
-        datetime UpdatedAt
+        numeric UnitPrice
+        boolean IsActive
+        timestamp CreatedAt
+        timestamp UpdatedAt
     }
 
     INVENTORY_MOVEMENTS {
-        uniqueidentifier Id PK
-        uniqueidentifier ProductId FK
-        nvarchar Type
+        uuid Id PK
+        uuid ProductId FK
+        varchar Type
         int Quantity
         int PreviousStock
         int NewStock
-        nvarchar Reason
-        uniqueidentifier CreatedByUserId FK
-        datetime CreatedAt
+        varchar Reason
+        uuid CreatedByUserId FK
+        timestamp CreatedAt
     }
 ```
 
