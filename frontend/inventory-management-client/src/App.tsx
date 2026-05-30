@@ -22,7 +22,7 @@ function LoginPage() {
   const { login, user } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('admin@inventory.local');
-  const [password, setPassword] = useState('Admin123*');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 

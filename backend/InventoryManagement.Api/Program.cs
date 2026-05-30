@@ -12,6 +12,12 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Serilog;
 
+EnvFile.Load(
+    Path.Combine(Directory.GetCurrentDirectory(), ".env"),
+    Path.Combine(Directory.GetCurrentDirectory(), "..", ".env"),
+    Path.Combine(Directory.GetCurrentDirectory(), "InventoryManagement.Api", ".env"),
+    Path.Combine(AppContext.BaseDirectory, ".env"));
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Host.UseSerilog((context, configuration) =>
@@ -149,6 +155,39 @@ namespace InventoryManagement.Api
                     error = "An unexpected error occurred.",
                     detail = environment.IsDevelopment() ? ex.Message : null
                 });
+            }
+        }
+    }
+
+    public static class EnvFile
+    {
+        public static void Load(params string[] paths)
+        {
+            foreach (var path in paths.Distinct())
+            {
+                if (!File.Exists(path))
+                {
+                    continue;
+                }
+
+                foreach (var line in File.ReadAllLines(path))
+                {
+                    var trimmed = line.Trim();
+                    if (string.IsNullOrWhiteSpace(trimmed) || trimmed.StartsWith('#'))
+                    {
+                        continue;
+                    }
+
+                    var separatorIndex = trimmed.IndexOf('=');
+                    if (separatorIndex <= 0)
+                    {
+                        continue;
+                    }
+
+                    var key = trimmed[..separatorIndex].Trim();
+                    var value = trimmed[(separatorIndex + 1)..].Trim().Trim('"');
+                    Environment.SetEnvironmentVariable(key, value);
+                }
             }
         }
     }

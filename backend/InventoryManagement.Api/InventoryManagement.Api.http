@@ -6,7 +6,7 @@ Accept: application/json
 
 {
   "email": "admin@inventory.local",
-  "password": "Admin123*"
+  "password": "<SEED_ADMIN_PASSWORD>"
 }
 
 ###

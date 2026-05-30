@@ -62,16 +62,16 @@ Frontend default: `http://localhost:5173`
 API default: `http://localhost:5000`  
 Swagger: `http://localhost:5000/swagger`
 
-The default local connection string assumes PostgreSQL on `localhost:5432` with database `inventory_management`, user `postgres` and password `postgres`:
+The local connection string is read from the `ConnectionStrings__DefaultConnection` environment variable. For a PostgreSQL instance on the default port, use:
 
 ```text
-Host=localhost;Port=5432;Database=inventory_management;Username=postgres;Password=postgres
+Host=localhost;Port=5432;Database=inventory_management;Username=postgres;Password=YOUR_PASSWORD
 ```
 
-If your local PostgreSQL installer uses a different password for `postgres`, override it without editing source files:
+On Windows PowerShell:
 
 ```bash
-set ConnectionStrings__DefaultConnection=Host=localhost;Port=5432;Database=inventory_management;Username=postgres;Password=YOUR_PASSWORD
+$env:ConnectionStrings__DefaultConnection="Host=localhost;Port=5432;Database=inventory_management;Username=postgres;Password=YOUR_PASSWORD"
 ```
 
 ## Run With Docker
@@ -83,10 +83,10 @@ docker compose up --build
 
 ## Test Credentials
 
-- Email: `admin@inventory.local`
-- Password: `Admin123*`
+- Email: read from `SEED_ADMIN_EMAIL`
+- Password: read from `SEED_ADMIN_PASSWORD`
 
-Seed data is created automatically when the API starts.
+For local development this project can load these values from `backend/.env`. Seed data is created automatically when the API starts.
 
 ## Main API Endpoints
 

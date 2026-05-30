@@ -66,8 +66,12 @@ public static class DependencyInjection
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         var connectionString = configuration.GetConnectionString("DefaultConnection")
-            ?? configuration["ConnectionStrings__DefaultConnection"]
-            ?? throw new InvalidOperationException("DefaultConnection is not configured.");
+            ?? configuration["ConnectionStrings__DefaultConnection"];
+
+        if (string.IsNullOrWhiteSpace(connectionString))
+        {
+            throw new InvalidOperationException("DefaultConnection is not configured. Set ConnectionStrings__DefaultConnection as an environment variable.");
+        }
 
         services.AddDbContext<InventoryDbContext>(options => options.UseNpgsql(connectionString));
         services.AddScoped<IUnitOfWork>(sp => sp.GetRequiredService<InventoryDbContext>());
@@ -159,7 +163,7 @@ public sealed class InventoryMovementRepository(InventoryDbContext db) : IInvent
     private IQueryable<InventoryMovement> Query() => db.InventoryMovements.Include(x => x.Product).Include(x => x.CreatedByUser);
 }
 
-public sealed class DatabaseSeeder(InventoryDbContext db, IPasswordHasher passwordHasher)
+public sealed class DatabaseSeeder(InventoryDbContext db, IPasswordHasher passwordHasher, IConfiguration configuration)
 {
     public async Task SeedAsync(CancellationToken cancellationToken = default)
     {
@@ -170,11 +174,17 @@ public sealed class DatabaseSeeder(InventoryDbContext db, IPasswordHasher passwo
             return;
         }
 
+        var adminPassword = configuration["SEED_ADMIN_PASSWORD"] ?? configuration["Seed:AdminPassword"];
+        if (string.IsNullOrWhiteSpace(adminPassword))
+        {
+            throw new InvalidOperationException("Seed admin password is not configured. Set SEED_ADMIN_PASSWORD as an environment variable.");
+        }
+
         var admin = new User
         {
-            FullName = "Inventory Admin",
-            Email = "admin@inventory.local",
-            PasswordHash = passwordHasher.Hash("Admin123*"),
+            FullName = configuration["SEED_ADMIN_FULL_NAME"] ?? "Inventory Admin",
+            Email = configuration["SEED_ADMIN_EMAIL"] ?? "admin@inventory.local",
+            PasswordHash = passwordHasher.Hash(adminPassword),
             Role = UserRole.Admin
         };
 
