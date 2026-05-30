@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import { notifyDataChanged } from '../state/dataEvents';
 import type { Supplier } from '../types';
 
 export const supplierService = {
@@ -8,13 +9,16 @@ export const supplierService = {
   },
   async create(payload: Omit<Supplier, 'id' | 'isActive'>) {
     const { data } = await apiClient.post<Supplier>('/suppliers', payload);
+    notifyDataChanged();
     return data;
   },
   async update(id: string, payload: Omit<Supplier, 'id' | 'isActive'>) {
     const { data } = await apiClient.put<Supplier>(`/suppliers/${id}`, payload);
+    notifyDataChanged();
     return data;
   },
   async deactivate(id: string) {
     await apiClient.delete(`/suppliers/${id}`);
+    notifyDataChanged();
   },
 };

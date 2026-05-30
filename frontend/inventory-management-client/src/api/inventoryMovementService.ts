@@ -1,4 +1,5 @@
 import { apiClient } from './client';
+import { notifyDataChanged } from '../state/dataEvents';
 import type { InventoryMovement, MovementType } from '../types';
 
 export const inventoryMovementService = {
@@ -12,6 +13,7 @@ export const inventoryMovementService = {
   },
   async register(payload: { productId: string; type: MovementType; quantity: number; reason: string }) {
     const { data } = await apiClient.post<InventoryMovement>('/inventory-movements', payload);
+    notifyDataChanged();
     return data;
   },
 };
