@@ -53,8 +53,8 @@ function LoginPage() {
             <p className="text-sm text-[#8a5a45]">Operational stock control</p>
           </div>
         </div>
-        <label className="mb-4 block text-sm font-medium text-[#684134]">Email<Input className="mt-1" value={email} onChange={(e) => setEmail(e.target.value)} type="email" required /></label>
-        <label className="mb-5 block text-sm font-medium text-[#684134]">Password<Input className="mt-1" value={password} onChange={(e) => setPassword(e.target.value)} type="password" required /></label>
+        <label className="mb-4 block text-sm font-medium text-[#684134]">Email<Input className="mt-1" placeholder="admin@inventory.local" value={email} onChange={(e) => setEmail(e.target.value)} type="email" required /></label>
+        <label className="mb-5 block text-sm font-medium text-[#684134]">Password<Input className="mt-1" placeholder="Enter your password" value={password} onChange={(e) => setPassword(e.target.value)} type="password" required /></label>
         {error && <div className="mb-4"><Alert tone="error">{error}</Alert></div>}
         <Button className="w-full" disabled={loading}>{loading ? <LoadingSpinner /> : 'Sign in'}</Button>
       </form>
@@ -263,8 +263,8 @@ function ProductForm({ product, categories, suppliers, onClose, onSaved }: { pro
   return (
     <Modal title={product ? 'Edit product' : 'New product'} onClose={onClose}>
       <form onSubmit={submit} className="grid gap-3 md:grid-cols-2">
-        <Input placeholder="Name" value={form.name} onChange={(e) => set('name', e.target.value)} required />
-        <Input placeholder="SKU" value={form.sku} onChange={(e) => set('sku', e.target.value)} required disabled={!!product} />
+        <Input placeholder="Product name" value={form.name} onChange={(e) => set('name', e.target.value)} required />
+        <Input placeholder="Unique SKU, e.g. ELEC-001" value={form.sku} onChange={(e) => set('sku', e.target.value)} required disabled={!!product} />
         <Select value={form.categoryId} onChange={(e) => set('categoryId', e.target.value)} required>
           <option value="" disabled>Select category</option>
           {categories.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -273,10 +273,10 @@ function ProductForm({ product, categories, suppliers, onClose, onSaved }: { pro
           <option value="" disabled>Select supplier</option>
           {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
         </Select>
-        <Input type="number" min="0" placeholder="Current stock" value={form.currentStock} onChange={(e) => set('currentStock', Number(e.target.value))} disabled={!!product} />
-        <Input type="number" min="0" placeholder="Minimum stock" value={form.minimumStock} onChange={(e) => set('minimumStock', Number(e.target.value))} />
-        <Input type="number" min="0" step="0.01" placeholder="Unit price" value={form.unitPrice} onChange={(e) => set('unitPrice', Number(e.target.value))} />
-        <Input placeholder="Description" value={form.description} onChange={(e) => set('description', e.target.value)} />
+        <Input type="number" min="0" placeholder="Initial stock quantity" aria-label="Initial stock quantity" value={form.currentStock} onChange={(e) => set('currentStock', Number(e.target.value))} disabled={!!product} />
+        <Input type="number" min="0" placeholder="Minimum stock alert level" aria-label="Minimum stock alert level" value={form.minimumStock} onChange={(e) => set('minimumStock', Number(e.target.value))} />
+        <Input type="number" min="0" step="0.01" placeholder="Unit price" aria-label="Unit price" value={form.unitPrice} onChange={(e) => set('unitPrice', Number(e.target.value))} />
+        <Input placeholder="Short product description" value={form.description} onChange={(e) => set('description', e.target.value)} />
         <div className="md:col-span-2 flex justify-end gap-2">
           <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
           <Button disabled={!form.categoryId || !form.supplierId}>Save</Button>
@@ -321,8 +321,8 @@ function CategoryForm({ category, onClose, onSaved }: { category: Category | nul
   return (
     <Modal title={category ? 'Edit category' : 'New category'} onClose={onClose}>
       <form onSubmit={submit} className="space-y-3">
-        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" required />
-        <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description" />
+        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Category name" required />
+        <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Category description" />
         <div className="flex justify-end gap-2">
           <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
           <Button>Save</Button>
@@ -367,11 +367,11 @@ function SupplierForm({ supplier, onClose, onSaved }: { supplier: Supplier | nul
   return (
     <Modal title={supplier ? 'Edit supplier' : 'New supplier'} onClose={onClose}>
       <form onSubmit={submit} className="grid gap-3 md:grid-cols-2">
-        <Input placeholder="Name" value={form.name} onChange={(e) => set('name', e.target.value)} required />
-        <Input placeholder="Contact" value={form.contactName} onChange={(e) => set('contactName', e.target.value)} />
-        <Input placeholder="Email" value={form.email} onChange={(e) => set('email', e.target.value)} />
-        <Input placeholder="Phone" value={form.phone} onChange={(e) => set('phone', e.target.value)} />
-        <Input className="md:col-span-2" placeholder="Address" value={form.address} onChange={(e) => set('address', e.target.value)} />
+        <Input placeholder="Supplier company name" value={form.name} onChange={(e) => set('name', e.target.value)} required />
+        <Input placeholder="Contact person name" value={form.contactName} onChange={(e) => set('contactName', e.target.value)} />
+        <Input placeholder="Supplier email" value={form.email} onChange={(e) => set('email', e.target.value)} />
+        <Input placeholder="Supplier phone" value={form.phone} onChange={(e) => set('phone', e.target.value)} />
+        <Input className="md:col-span-2" placeholder="Supplier address" value={form.address} onChange={(e) => set('address', e.target.value)} />
         <div className="md:col-span-2 flex justify-end gap-2">
           <Button type="button" variant="secondary" onClick={onClose}>Cancel</Button>
           <Button>Save</Button>
@@ -416,8 +416,8 @@ function MovementsPage() {
             <option>Exit</option>
             <option>Adjustment</option>
           </Select>
-          <Input type="number" min="0" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })} />
-          <Input placeholder="Reason" value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} required />
+          <Input type="number" min="0" placeholder="Quantity" aria-label="Movement quantity" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: Number(e.target.value) })} />
+          <Input placeholder="Reason for movement" value={form.reason} onChange={(e) => setForm({ ...form, reason: e.target.value })} required />
           <Button disabled={!form.productId}>Register</Button>
         </form>
       </Card>
